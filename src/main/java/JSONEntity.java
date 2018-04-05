@@ -7,28 +7,35 @@ import com.google.gson.Gson;
 public class JSONEntity {
 
 
-    private int ledNumber;
+
     private int r;
     private int g;
     private int b;
-    private boolean power;
 
-    public  void setJSON ( int ledNumber, int r, int g, int b, boolean power)
+    JSONEntity ()
     {
-        this.ledNumber = ledNumber;
+
+    }
+JSONEntity ( int r, int g, int b)
+    {
         this.r = r;
         this.g = g;
         this.b = b;
-        this.power = power;
     }
 
-
-
-
-    public int getLedNumber ()
+    public  void setJSON (  int r, int g, int b)
     {
-        return this.ledNumber;
+
+        this.r = r;
+        this.g = g;
+        this.b = b;
+
     }
+
+
+
+
+
 
     public int getR ()
     {
@@ -45,10 +52,7 @@ public class JSONEntity {
         return this.b;
     }
 
-    public boolean getPowerSwitch ()
-    {
-        return this.power;
-    }
+
 
 
 
