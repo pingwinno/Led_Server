@@ -8,6 +8,7 @@ public class MQTTService implements MqttCallback {
 
 
     String clientId;
+    private MqttClient client2;
     private MqttClient client;
     private String 				brokerUrl;
     private MqttConnectOptions conOpt;
@@ -16,14 +17,18 @@ public class MQTTService implements MqttCallback {
     private String userName;
     private String receivedMessage = "null";
     private boolean status;
-   private String tmpDir = System.getProperty("java.io.tmpdir");
+    private String tmpDir = System.getProperty("java.io.tmpdir");
+
+   private String tmpDir2 = System.getProperty("java.io.tmpdir");
+    private MqttDefaultFilePersistence dataStore2 = new MqttDefaultFilePersistence(tmpDir2);
     private MqttDefaultFilePersistence dataStore = new MqttDefaultFilePersistence(tmpDir);
     private String string;
     private Gson gson = new Gson();
     private JSONEntity storedJSON;
     private JSONEntity powerOff = new JSONEntity(0,0,0);
     String brokerURL = "tcp://192.168.1.201:1883";
-    String clientID = "BackendServer111111";
+    String clientID2 = "BackendServer111111111";
+    private String powerState;
 
 
 
@@ -67,9 +72,11 @@ public class MQTTService implements MqttCallback {
 
             // Construct an MQTT blocking mode client
             client = new MqttClient(this.brokerUrl, clientId, dataStore);
+            client2 = new MqttClient(this.brokerUrl, clientID2, dataStore2);
 
             // Set this wrapper as the callback handler
             client.setCallback(this);
+            client2.setCallback(this);
 
         }
         catch (MqttException e) {
@@ -103,7 +110,7 @@ public class MQTTService implements MqttCallback {
 
         // Connect to the MQTT server
         System.out.println("Connecting to "+brokerUrl + " with client ID "+client.getClientId());
-        client.connect(conOpt);
+        //client.connect(conOpt);
         System.out.println("Connected");
 
 
@@ -118,7 +125,7 @@ public class MQTTService implements MqttCallback {
         client.publish(topicName, message);
 
         // Disconnect the client
-        client.disconnect();
+       // client.disconnect();
         System.out.println("Disconnected");
     }
 
@@ -139,6 +146,7 @@ public class MQTTService implements MqttCallback {
 
         // Connect to the MQTT server
         client.connect(conOpt);
+        client2.connect(conOpt);
         System.out.println("Connected to "+brokerUrl+" with client ID "+client.getClientId());
 
         // Subscribe to the requested topic
@@ -173,19 +181,32 @@ public class MQTTService implements MqttCallback {
     public void messageArrived(String topic, MqttMessage message) throws MqttException {
 
        String replyTo = new String(message.getPayload());
-        MQTTService service  = new MQTTService(brokerURL, clientID, true, null, null);
+        message.setQos(0);
         System.out.println(replyTo);
         if (replyTo.equals("0"))
         {
-            service.publish("test", 0, gson.toJson(powerOff).getBytes());
+            powerState = replyTo;
+            message.setPayload(gson.toJson(powerOff).getBytes());
+
+            client2.publish("test", message);
         }
         else if (replyTo.equals("1")) {
-            service.publish("test", 0, gson.toJson(storedJSON).getBytes());
+            powerState = replyTo;
+
+            message.setPayload(gson.toJson(storedJSON).getBytes());
+            client2.publish("test", message);
+
             System.out.println(gson.toJson(storedJSON));
 
         }
         else if (replyTo.equals("query")) {
-            service.publish("test1", 0, gson.toJson(storedJSON).getBytes());
+
+            message.setPayload(gson.toJson(storedJSON).getBytes());
+            client2.publish("test2", message);
+
+            message.setPayload(powerState.getBytes());
+            client2.publish("test2", message);
+
             System.out.println(gson.toJson(storedJSON));
         }
 

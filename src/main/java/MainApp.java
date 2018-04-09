@@ -8,8 +8,7 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -24,37 +23,35 @@ public class MainApp  {
     private JSONEntity powerOff = new JSONEntity(0,0,0);
     MQTTService service;
 
-    public static void main (String[] agrs)
-    {
+    public static void main (String[] agrs) throws IOException {
         String brokerURL = "tcp://192.168.1.201:1883";
         String clientID = "BackendServer11";
         MqttMessage reciver = new MqttMessage();
-        String message ;
-     MainApp mainApp = new MainApp();
+        Settings settings;
+        Gson gson = new Gson();
+
+        try (BufferedReader br =
+                     new BufferedReader(new FileReader("config.conf"))) {
+            settings = gson.fromJson(br, Settings.class);
+        }
+
+            try {
 
 
+                MQTTService service = new MQTTService(settings.getServerIP(), settings.getPrimaryID(), true, settings.getLogin(), settings.getPassword());
+                service.subscribe(settings.getSecondaryTopic(), 0);
 
 
+            } catch (MqttException e) {
+                e.printStackTrace();
+            }
 
-    try {
-
-
-        MQTTService service = new MQTTService(brokerURL, clientID, true, null, null);
-        service.subscribe("test1", 0);
-
-
-
-
-    } catch (MqttException e) {
-        e.printStackTrace();
+        
+        }
     }
 
 
 
-    }
 
 
 
-
-
-}
